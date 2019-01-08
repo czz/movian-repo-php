@@ -20,6 +20,7 @@ Use it like this:
     $json = $mp->build($list);
  
     // now you have the json string do what you whant, we echo it 
+    header('Content-Type: application/json');
     echo $json;
 ~~~
 
