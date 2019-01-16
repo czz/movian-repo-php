@@ -129,12 +129,10 @@ class MovianRepo {
                 $plugin_json->icon = $this->_getIcon($el, $sha, $plugin_json->icon);
                 array_push($res['plugins'],$plugin_json);
 
-                return json_encode($res);
-
             }
 
         }
-        return false;
+        return json_encode($res);
 
     }
 
@@ -149,6 +147,6 @@ function movian_repo_test($list) {
     return $mp->build($list);
 }
 
-
+//header('Content-Type: application/json');
 //echo movian_repo_test(array("/czz/movian-plugin-zooqle"));
 
