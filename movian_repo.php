@@ -7,23 +7,54 @@
  */
 class MovianRepo {
 
+    public static $_USERAGENT = "Movian Repo";  // http://developer.github.com/v3/#user-agent-required
+
+    private $_VERSION = 1;
+
     private $_URL= "https://github.com";
     private $_APIURL= "https://api.github.com/repos";
     private $_RAWURL = "https://raw.githubusercontent.com";
     private $_MASTERBRANCH = "/branches/master";
 
-    private $_USERAGENT = "Movian Repo";  // http://developer.github.com/v3/#user-agent-required
+    private $_CB;
 
-    private $_VERSION = 1;
 
     /*
      * Contruct function
      * @version int Version of plugin json
      */
-    function __construct($version = 1) {
+    function __construct($func , $version = 1) {
 
        $this->_VERSION = intval($version);
 
+       $this->setCB($func);
+    }
+
+
+    /*
+     * Static function to retrieve USERAGENT
+     * @return string _USERAGENT
+     */
+    public static function getUserAgent(){
+        return self::$_USERAGENT;
+    }
+
+
+    /*
+     * Set a Callback for Url requests
+     */
+    private function setCB($func){
+        $this->_CB = &$func;
+    }
+
+
+    /*
+     * Get url with callback function
+     * @return result of function cb
+     */
+    private function getUrl($url){
+        $func = &$this->_CB;
+        return $func($url);
     }
 
 
@@ -36,15 +67,7 @@ class MovianRepo {
 
         $url = $this->_APIURL . $repo_path . $this->_MASTERBRANCH;
 
-        $ch =  curl_init($url);
-        curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1); // returns empty string n failure
-        curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, 0);
-        curl_setopt($ch, CURLOPT_HTTPAUTH, CURLAUTH_BASIC);
-        curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 5);
-        curl_setopt($ch, CURLOPT_TIMEOUT, 3);
-        curl_setopt($ch, CURLOPT_HTTPHEADER, array('Accept: application/json'));
-        curl_setopt($ch, CURLOPT_USERAGENT, $this->_USERAGENT);
-        $result = curl_exec($ch);
+        $result = $this->getUrl($url);
 
         if (!empty($result)){
 
@@ -70,15 +93,7 @@ class MovianRepo {
 
         $url = $this->_RAWURL . $repo_path . "/" . $sha . "/plugin.json";
 
-        $ch =  curl_init($url);
-        curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1); // returns empty string n failure
-        curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, 0);
-        curl_setopt($ch, CURLOPT_HTTPAUTH, CURLAUTH_BASIC);
-        curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 5);
-        curl_setopt($ch, CURLOPT_TIMEOUT, 3);
-        curl_setopt($ch, CURLOPT_HTTPHEADER, array('Accept: application/json'));
-        curl_setopt($ch, CURLOPT_USERAGENT, $this->_USERAGENT);
-        $result = curl_exec($ch);
+        $result = $this->getUrl($url);
 
         if(!empty($result)){
 
@@ -143,10 +158,24 @@ class MovianRepo {
  * Test function
  */
 function movian_repo_test($list) {
-    $mp = new MovianRepo();
+
+    // we use curl as callback function
+    $mp = new MovianRepo( function($url) {
+                              $ch =  curl_init($url);
+                              curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1); // returns empty string n failure
+                              curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, 0);
+                              curl_setopt($ch, CURLOPT_HTTPAUTH, CURLAUTH_BASIC);
+                              curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 5);
+                              curl_setopt($ch, CURLOPT_TIMEOUT, 3);
+                              curl_setopt($ch, CURLOPT_HTTPHEADER, array('Accept: application/json'));
+                              curl_setopt($ch, CURLOPT_USERAGENT,  MovianRepo::getUserAgent());
+                              $result = curl_exec($ch);
+                              return $result;
+                           }
+                         );
+
     return $mp->build($list);
 }
 
 //header('Content-Type: application/json');
 //echo movian_repo_test(array("/czz/movian-plugin-zooqle"));
-
