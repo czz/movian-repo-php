@@ -16,7 +16,22 @@ See https://github.com/andoma/movian-plugin-modarchive for an example how this s
 Use it like this:
 ~~~
     $list = array("/relative_path_to_git_repo_1", "/relative_path_to_git_repo_2");
-    $mp = new MovianRepo();
+
+    // With cUrl Callback Function
+    $mp = new MovianRepo( function($url) {
+                              $ch =  curl_init($url);
+                              curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1); // returns empty string n failure
+                              curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, 0);
+                              curl_setopt($ch, CURLOPT_HTTPAUTH, CURLAUTH_BASIC);
+                              curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 5);
+                              curl_setopt($ch, CURLOPT_TIMEOUT, 3);
+                              curl_setopt($ch, CURLOPT_HTTPHEADER, array('Accept: application/json'));
+                              curl_setopt($ch, CURLOPT_USERAGENT,  MovianRepo::getUserAgent());
+                              $result = curl_exec($ch);
+                              return $result;
+                           }
+                         );
+                         
     $json = $mp->build($list);
  
     // now you have the json string do what you whant, we echo it 
