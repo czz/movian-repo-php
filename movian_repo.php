@@ -13,8 +13,7 @@ class MovianRepo {
 
     private $_URL= "https://github.com";
     private $_APIURL= "https://api.github.com/repos";
-    private $_RAWURL = "https://raw.githubusercontent.com";
-    private $_MASTERBRANCH = "/branches/master";
+    private $_BRANCH = "master";
 
     private $_CB;
 
@@ -65,7 +64,7 @@ class MovianRepo {
      */
     private function _getSha($repo_path) {
 
-        $url = $this->_APIURL . $repo_path . $this->_MASTERBRANCH;
+        $url = $this->_APIURL . $repo_path . "/branches/" . $this->_BRANCH;
 
         $result = $this->getUrl($url);
 
@@ -89,9 +88,19 @@ class MovianRepo {
      *  @repo_path string Relative path of plugin.json
      *  @return object of plugin.json in php
      */
-    private function _getPluginJson($repo_path, $sha) {
+    private function _getPluginJson($repo_path) {
 
-        $url = $this->_RAWURL . $repo_path . "/" . $sha . "/plugin.json";
+        $url = $this->_APIURL . $repo_path . "/contents/plugin.json?ref=" . $this->_BRANCH;
+
+        $result = $this->getUrl($url);
+
+        if(empty($result)){
+           return false;
+        }
+
+        $result = json_decode($result);
+        $url = $result->download_url;
+
 
         $result = $this->getUrl($url);
 
@@ -115,8 +124,20 @@ class MovianRepo {
      *  @icon_name string Icon name
      *  @return string Icon url
      */
-    private function _getIcon($repo_path, $sha, $icon_name) {
-        return $this->_RAWURL . $repo_path . "/" . $sha . "/" . $icon_name;
+    private function _getIcon($repo_path, $icon_name) {
+
+
+        $url = $this->_APIURL . $repo_path . "/contents/" . $icon_name . "?ref=" . $this->_BRANCH;
+        $result = $this->getUrl($url);
+
+        if(empty($result)){
+           return false;
+        }
+
+        $result = json_decode($result);
+
+        return $result->download_url;
+
     }
 
 
@@ -139,9 +160,9 @@ class MovianRepo {
             }
             else {
 
-                $plugin_json = $this->_getPluginJson($el,$sha);
+                $plugin_json = $this->_getPluginJson($el);
                 $plugin_json->downloadURL = $this->_URL . $el . "/archive/" . $sha . ".zip";
-                $plugin_json->icon = $this->_getIcon($el, $sha, $plugin_json->icon);
+                $plugin_json->icon = $this->_getIcon($el, $plugin_json->icon);
                 array_push($res['plugins'],$plugin_json);
 
             }
